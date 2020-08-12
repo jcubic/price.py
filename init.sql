@@ -1,0 +1,29 @@
+CREATE TABLE IF NOT EXISTS shop (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(400)
+);
+
+CREATE TABLE IF NOT EXISTS product (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(800)
+);
+
+CREATE TABLE IF NOT EXISTS price (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    shop INTEGER NOT NULL,
+    product INTEGER NOT NULL,
+    delivery VARCHAR(100),
+    score REAL,
+    opinions INTEGER,
+    avaiable INTEGER,
+    price REAL,
+    time INTEGER NOT NULL,
+    FOREIGN KEY(shop) REFERENCES shop(id),
+    FOREIGN KEY(product) REFERENCES product(id),
+    FOREIGN KEY(time) REFERENCES time(id)
+);
+
+CREATE TABLE IF NOT EXISTS time (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time INTEGER
+);
