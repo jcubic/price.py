@@ -6,11 +6,13 @@ import os.path
 import os
 import re
 import logging
+import traceback
 import sys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from datetime import datetime
 from optparse import OptionParser
+import smtplib
 
 def init_db():
     DB_NAME = 'price.db'
@@ -20,6 +22,28 @@ def init_db():
         c.execute(query)
     conn.commit()
     return conn
+
+def error(e, host = None, email = None, username = None, password = None):
+    logger.error(e)
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    stack = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+    print(stack)
+    try:
+        if host is not None:
+            message = """From: Me <%s>
+To: Me <%s>
+Subject: Price Error
+
+There is error in price.py
+
+%s
+"""
+            s = smtplib.SMTP(host)
+            s.login(username, password)
+            s.sendmail(email, email, message % (email, email, stack))
+            s.quit()
+    except Exception as e:
+        error(e)
 
 def real_price(str):
     return float(str.replace(',', '.').replace('zł', ''))
@@ -53,7 +77,7 @@ def parse(html):
             item['price'] = real_price(node.text.strip())
             node = row.find(class_ = "stars")
             item['score'] = real_score(node.text.strip())
-            node = row.find(class_ = 'dotted-link')
+            node = row.find(class_ = 'link--accent')
             item['opinions'] = int_opinions(node.text.strip())
             node = row.find('td', class_ = 'cell-store-logo')
             node = node.find('img')
@@ -115,6 +139,18 @@ if __name__ == '__main__':
     parser.add_option("-p", "--product", action="store",
                       dest="product", default = '', metavar="NAME",
                       help="name of the product")
+    parser.add_option("", "--username", action="store",
+                      dest="username", default = '', metavar="USER",
+                      help="SMTP account username")
+    parser.add_option("-e", "--email", action="store",
+                      dest="email", default = '', metavar="EMAIL",
+                      help="email address")
+    parser.add_option("", "--host", action="store",
+                      dest="host", default = '', metavar="HOST",
+                      help="SMPT server hostname")
+    parser.add_option("", "--password", action="store",
+                      dest="passwd", default = '', metavar="PASSWD",
+                      help="SMPT accout password")
 
     (options, args) = parser.parse_args()
     if options.product is None or options.url is None:
@@ -161,13 +197,13 @@ if __name__ == '__main__':
 
             print("price: %s from %s (%s)" % (offer['price'], offer['shop'], shop_id))
         conn.commit()
-    except sqlite3.Error as e:
-        logger.error(e)
-        exc_type, exc_value, exc_tb = sys.exc_info()
-        print(traceback.format_exception(exc_type, exc_value, exc_tb))
     except Exception as e:
-        logger.error(e)
-
-#select min(price.price), datetime(time.time, 'unixepoch') from price inner join time on time.id = price.time group by time.time;
+        error(
+            e,
+            host = options.host,
+            email = options.email,
+            username = options.username,
+            password = options.passwd
+        )
 
 
