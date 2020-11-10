@@ -140,13 +140,13 @@ if __name__ == '__main__':
                       dest="product", default = '', metavar="NAME",
                       help="name of the product")
     parser.add_option("", "--username", action="store",
-                      dest="username", default = '', metavar="USER",
+                      dest="username", default = None, metavar="USER",
                       help="SMTP account username")
     parser.add_option("-e", "--email", action="store",
-                      dest="email", default = '', metavar="EMAIL",
+                      dest="email", default = None, metavar="EMAIL",
                       help="email address")
     parser.add_option("", "--host", action="store",
-                      dest="host", default = '', metavar="HOST",
+                      dest="host", default = None, metavar="HOST",
                       help="SMPT server hostname")
     parser.add_option("", "--password", action="store",
                       dest="passwd", default = '', metavar="PASSWD",
