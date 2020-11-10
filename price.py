@@ -66,35 +66,35 @@ def real_delivery(str):
 def parse(html):
     result = []
     soup = BeautifulSoup(html, 'html.parser')
-    tables = soup.find_all('table', class_ = "product-offers")
-    for table in tables:
-        rows = table.find_all('tr', class_ = 'product-offer')
-        for row in rows:
-            item = {}
-            node = row.find('span', class_="price-format")
-            if node is None:
-                raise Exception("Error: Wrong price html node")
-            item['price'] = real_price(node.text.strip())
-            node = row.find(class_ = "stars")
-            item['score'] = real_score(node.text.strip())
-            node = row.find(class_ = 'link--accent')
-            item['opinions'] = int_opinions(node.text.strip())
-            node = row.find('td', class_ = 'cell-store-logo')
-            node = node.find('img')
-            if node is None:
-                raise Exception("Error: Image with shop log is None")
-            item['shop'] = node['alt']
-            if item['shop'] is None:
-                raise Exception("Error: no alt on shop image")
-            node = row.find(class_ = 'product-delivery-info')
-            delivery = real_delivery(node.text.strip())
-            if delivery > 0:
-                item['delivery'] = delivery - item['price']
-            else:
-                item['delivery'] = 0
-            node = row.find(class_ = 'product-availability')
-            item['available'] = node.text.strip()
-            result.append(item)
+    items = soup.find_all('li', class_ = "js_productOfferGroupItem")
+    if len(items) == 0:
+        raise Exception("Error: No entires")
+    for item in items:
+        entry = {}
+        node = item.find('span', class_="price-format")
+        if node is None:
+            raise Exception("Error: Wrong price html node")
+        entry['price'] = real_price(node.text.strip())
+        node = item.find(class_ = "stars")
+        entry['score'] = real_score(node.text.strip())
+        node = item.find(class_ = 'link--accent')
+        entry['opinions'] = int_opinions(node.text.strip())
+        node = item.find('a', class_ = 'store-logo')
+        node = node.find('img')
+        if node is None:
+            raise Exception("Error: Image with shop log is None")
+        entry['shop'] = node['alt']
+        if entry['shop'] is None:
+            raise Exception("Error: no alt on shop image")
+        node = item.find(class_ = 'product-delivery-info')
+        delivery = real_delivery(node.text.strip())
+        if delivery > 0:
+            entry['delivery'] = delivery - entry['price']
+        else:
+            entry['delivery'] = 0
+        node = item.find(class_ = 'product-availability')
+        entry['available'] = node.text.strip()
+        result.append(entry)
     return result
 
 def create_logger():
