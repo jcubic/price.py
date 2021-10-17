@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from optparse import OptionParser
 import smtplib
+import simplejson as json
 
 def init_db():
     DB_NAME = 'price.db'
@@ -46,7 +47,7 @@ There is error in price.py
         error(e)
 
 def real_price(str):
-    return float(str.replace(',', '.').replace('zł', ''))
+    return float(re.sub(r'[^0-9,]', '', str).replace(',', '.').replace('zł', ''))
 
 def real_score(str):
     return float(re.sub(r'[^0-9,/]|/\s*5', '', str).replace(',', '.'))
@@ -130,7 +131,7 @@ def get_shop(shops, name):
 def chwd():
     script = os.path.realpath(__file__)
     path = os.path.dirname(script)
-    os.chdir(path)
+    os.chdir(path)    
 
 if __name__ == '__main__':
     parser = OptionParser(usage="%prog [-u|--url] [-p|--product]")
@@ -139,23 +140,32 @@ if __name__ == '__main__':
     parser.add_option("-p", "--product", action="store",
                       dest="product", default = '', metavar="NAME",
                       help="name of the product")
-    parser.add_option("", "--username", action="store",
-                      dest="username", default = None, metavar="USER",
-                      help="SMTP account username")
+    parser.add_option("-c", "--config", action="store",
+                      dest="config", default = None, metavar="CONFIG",
+                      help="config file with SMTP info")
     parser.add_option("-e", "--email", action="store",
                       dest="email", default = None, metavar="EMAIL",
                       help="email address")
     parser.add_option("", "--host", action="store",
                       dest="host", default = None, metavar="HOST",
-                      help="SMPT server hostname")
+                      help="SMTP server hostname")
+    parser.add_option("", "--username", action="store",
+                      dest="username", default = None, metavar="USER",
+                      help="SMTP account username")
     parser.add_option("", "--password", action="store",
                       dest="passwd", default = '', metavar="PASSWD",
-                      help="SMPT accout password")
+                      help="SMTP account password")
 
     (options, args) = parser.parse_args()
     if options.product is None or options.url is None:
         parser.print_help()
         sys.exit()
+    if options.config is None:
+        config = {}
+        for name in ["email", "host", "username", "password"]:
+            config[name] = options[name]
+    else:
+        config = json.loads(open(options.config).read())
     product = options.product
     url = options.url
     try:
@@ -200,10 +210,10 @@ if __name__ == '__main__':
     except Exception as e:
         error(
             e,
-            host = options.host,
-            email = options.email,
-            username = options.username,
-            password = options.passwd
+            host = config.host,
+            email = config.email,
+            username = config.username,
+            password = config.passwd
         )
 
 
