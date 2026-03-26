@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["email", "sites", "products"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "email": {
+      "type": "object",
+      "required": ["server"],
+      "additionalProperties": false,
+      "properties": {
+        "server": {
+          "type": "object",
+          "required": ["host", "port", "email", "password"],
+          "additionalProperties": false,
+          "properties": {
+            "host": { "type": "string" },
+            "port": { "type": "integer" },
+            "email": { "type": "string", "format": "email" },
+            "password": { "type": "string" }
+          }
+        }
+      }
+    },
+    "sites": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/site" }
+    },
+    "products": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/product" }
+    }
+  },
+  "$defs": {
+    "site": {
+      "type": "object",
+      "required": ["url", "query"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable site name (e.g. 'Ceneo.pl')"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL template with Liquid variables (e.g. 'https://ceneo.pl/{{product_id}}')"
+        },
+        "params": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of parameter names used in the URL template"
+        },
+        "pagination": { "$ref": "#/$defs/pagination" },
+        "query": { "$ref": "#/$defs/query" }
+      }
+    },
+    "query": {
+      "type": "object",
+      "required": ["type", "selector", "variables"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["list", "single"],
+          "description": "'list' for multiple offers per page, 'single' for one price per page"
+        },
+        "selector": {
+          "type": "string",
+          "description": "CSS selector for the offer container(s)"
+        },
+        "expect": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "CSS selectors that must exist on the page. Sends error email if missing."
+        },
+        "filter": { "$ref": "#/$defs/filter" },
+        "variables": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/variable" }
+        }
+      }
+    },
+    "variable": {
+      "type": "object",
+      "required": ["selector", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "selector": { "type": "string" },
+        "value": { "$ref": "#/$defs/valueSpec" },
+        "default": {},
+        "sibling": { "type": "boolean" }
+      }
+    },
+    "valueSpec": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["text", "attribute"]
+        },
+        "name": {
+          "type": "string",
+          "description": "HTML attribute name (required when type is 'attribute')"
+        },
+        "regex": {
+          "type": "string",
+          "description": "Regex to extract a capture group from the raw value"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "String prepended to the final value"
+        },
+        "parse": {
+          "type": "string",
+          "enum": ["number", "money"],
+          "description": "'number' for plain integers/floats, 'money' for locale-aware currency parsing via babel"
+        }
+      }
+    },
+    "filter": {
+      "type": "object",
+      "required": ["selector"],
+      "additionalProperties": false,
+      "properties": {
+        "selector": { "type": "string" },
+        "exclude_class": { "type": "string" }
+      }
+    },
+    "pagination": {
+      "type": "object",
+      "required": ["type", "selector"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["next_link", "numbered"]
+        },
+        "selector": { "type": "string" },
+        "active_class": { "type": "string" },
+        "base_url": { "type": "string" },
+        "max_pages": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "product": {
+      "type": "object",
+      "required": ["site", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "site": {
+          "type": "string",
+          "description": "Reference to a site definition in 'sites'"
+        },
+        "name": {
+          "type": "string",
+          "description": "Product name, used for state files and display"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Values for the site URL template variables"
+        },
+        "schedule": {
+          "description": "Cron expression or array of expressions",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "description": "Liquid template for the email subject line"
+        },
+        "template": {
+          "type": "string",
+          "description": "Path to the Liquid template file for the email body"
+        },
+        "email": {
+          "type": "string",
+          "description": "Recipient email address"
+        },
+        "notify": {
+          "description": "Validator(s) for price alerts. Array uses OR logic (any passing triggers alert).",
+          "oneOf": [
+            { "$ref": "#/$defs/validator" },
+            {
+              "type": "array",
+              "items": { "$ref": "#/$defs/validator" },
+              "minItems": 1
+            }
+          ]
+        }
+      }
+    },
+    "validator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "require": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, this validator must always pass (AND logic)."
+        },
+        "test": {
+          "type": "string",
+          "description": "A numexpr expression with Liquid variable placeholders, e.g. '{{price}} < 300'."
+        },
+        "match": {
+          "description": "Regex match condition(s).",
+          "oneOf": [
+            { "$ref": "#/$defs/matchCondition" },
+            {
+              "type": "array",
+              "items": { "$ref": "#/$defs/matchCondition" },
+              "minItems": 1
+            }
+          ]
+        }
+      }
+    },
+    "matchCondition": {
+      "type": "object",
+      "required": ["value", "regex"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "string" },
+        "regex": { "type": "string" },
+        "exist": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

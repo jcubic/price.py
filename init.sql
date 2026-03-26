@@ -1,29 +1,32 @@
-CREATE TABLE IF NOT EXISTS shop (
+CREATE TABLE IF NOT EXISTS website (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(400)
+    name VARCHAR(200) NOT NULL,
+    url VARCHAR(800) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS product (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(800)
+    name VARCHAR(800) NOT NULL,
+    website_id INTEGER NOT NULL,
+    url VARCHAR(800) NOT NULL UNIQUE,
+    FOREIGN KEY (website_id) REFERENCES website(id)
+);
+
+CREATE TABLE IF NOT EXISTS shop (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(400) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS price (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    shop INTEGER NOT NULL,
-    product INTEGER NOT NULL,
-    delivery VARCHAR(100),
+    product_id INTEGER NOT NULL,
+    shop_id INTEGER NOT NULL,
+    price REAL NOT NULL,
     score REAL,
     opinions INTEGER,
-    avaiable INTEGER,
-    price REAL,
-    time INTEGER NOT NULL,
-    FOREIGN KEY(shop) REFERENCES shop(id),
-    FOREIGN KEY(product) REFERENCES product(id),
-    FOREIGN KEY(time) REFERENCES time(id)
-);
-
-CREATE TABLE IF NOT EXISTS time (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    time INTEGER
+    available INTEGER DEFAULT 1,
+    delivery VARCHAR(200),
+    timestamp INTEGER NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES product(id),
+    FOREIGN KEY (shop_id) REFERENCES shop(id)
 );

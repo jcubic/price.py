@@ -1,0 +1,72 @@
+{
+  "email": {
+    "server": {
+      "host": "smtp.example.com",
+      "port": 587,
+      "email": "you@example.com",
+      "password": "your-password-here"
+    }
+  },
+  "sites": {
+    "ceneo": {
+      "name": "Ceneo.pl",
+      "url": "https://www.ceneo.pl/{{product_id}}",
+      "params": ["product_id"],
+      "query": {
+        "type": "list",
+        "selector": ".product-offer",
+        "expect": [".product-offer .price-format", ".product-offer .store-logo img"],
+        "variables": {
+          "shop": {
+            "selector": ".store-logo img",
+            "value": { "type": "attribute", "name": "alt" }
+          },
+          "price": {
+            "selector": ".price-format",
+            "value": { "type": "text", "parse": "money" }
+          },
+          "price_display": {
+            "selector": ".price-format",
+            "value": { "type": "text" }
+          },
+          "score": {
+            "selector": ".stars",
+            "value": { "type": "text", "regex": "([\\d,]+)\\s*/", "parse": "money" },
+            "default": ""
+          },
+          "opinions": {
+            "selector": ".link--accent",
+            "value": { "type": "text", "regex": "(\\d+)", "parse": "number" },
+            "default": "0"
+          },
+          "delivery": {
+            "selector": "[class*=delivery]",
+            "value": { "type": "text" },
+            "default": ""
+          },
+          "available": {
+            "selector": "[class*=avail]",
+            "value": { "type": "text" },
+            "default": ""
+          }
+        }
+      }
+    }
+  },
+  "products": [
+    {
+      "site": "ceneo",
+      "name": "Kingston FURY Impact 64GB DDR5 5600MHz CL40",
+      "params": { "product_id": "147663474" },
+      "schedule": "15 10 * * *",
+      "subject": "[Ceneo] Price alert: {{ product_name }}",
+      "template": "./templates/price-alert",
+      "email": "you@example.com",
+      "notify": [
+        { "test": "{{price}} < 3000" },
+        { "test": "{{price}} < 2800" },
+        { "test": "{{price}} < 2500" }
+      ]
+    }
+  ]
+}

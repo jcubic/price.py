@@ -1,0 +1,18 @@
+Price Alert
+Checked at: {{ now }}
+
+Product: {{ product_name }}
+URL: {{ search_url }}
+
+{{ count }} offer{% if count != 1 %}s{% endif %} matched your alert:
+============================================================
+{% for item in items %}
+
+{{ item.index }}. {{ item.shop }}
+   Price:    {{ item.price_display }}
+   Score:    {{ item.score }}
+   Delivery: {{ item.delivery }}
+   {{ item.available }}
+{% endfor %}
+
+============================================================
