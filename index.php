@@ -57,7 +57,7 @@ function map($data) {
 }
 
 if (!isset($_GET['name'])) {
-    $date = isset($_GET['date']) ? $_GET['date'] : '2024-01-01';
+    $date = isset($_GET['date']) ? $_GET['date'] : '2020-01-01';
 ?><!DOCTYPE html>
 <html>
 <head>
